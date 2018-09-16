@@ -6,6 +6,7 @@ class Getdata(object):
         self.db = pymysql.connect(host="192.168.52.110", user="superman", password="123456", port=3306, database="tg")
         self.cursor = self.db.cursor()
 
+
     def get_phone_number(self):
         total_phone_sql = "select count(uphone) from myadd_tphone;"
         self.cursor.execute(total_phone_sql)
@@ -26,6 +27,7 @@ class Getdata(object):
         total_channel_umber = self.cursor.fetchone()[0]
         print(total_channel_umber)
         num = 0
+
         while num < total_channel_umber:
             phone_sql = "select gaddr from myadd_tgroup limit {}, 100;".format(num)
             self.cursor.execute(phone_sql)

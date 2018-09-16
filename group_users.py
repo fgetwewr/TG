@@ -1,80 +1,84 @@
-import os
-import random
-import sys
-import time
-import pymysql
-from telethon.tl.functions.channels import GetParticipantsRequest
-from telethon.tl.types import ChannelParticipantsSearch
-from telethon.tl.functions.messages import ImportChatInviteRequest
-from telethon.errors.rpcerrorlist import UserAlreadyParticipantError, UsersTooMuchError, PhoneNumberInvalidError
-from telethon import TelegramClient
-from telethon.errors.rpcerrorlist import FloodWaitError
-from .auto_check_phone import Phonecontact
+from utils import *
+
+logger = logging.getLogger(__name__)
 
 
 class Telegram(object):
     def __init__(self, app_id, app_hash):
-        self.app_id = app_id
-        self.app_hash = app_hash
-        self.proxies = ["64.118.87.28:2447", ]
-        self.proxy = random.choice(self.proxies)
+        # self.proxy = Utils().proxies()  # 代理IP
         self.db = pymysql.connect(host="192.168.52.110", user="superman", password="123456", port=3306, database="tg")
         self.cursor = self.db.cursor()
+        try:
+            self.client = TelegramClient(os.environ.get('TG_SESSION', 'printer'), app_id, app_hash, proxy=None).start()
+        except PhoneNumberInvalidError:
+            print("Invalid Mobile number,Insert Phone number start with +")
+            exit()
 
-    def get_phone_and_group(self):
+    def __del__(self):
+        self.db.close()
+        # self.client.disconnect()  # 关闭客户端连接
+
+    async def get_phone(self):
         """获取手机号和群链接"""
-        total_phone = " select count(uphone) from myadd_tphone;"
-        total_channel = " select count(gaddr) from myadd_tgroup;"
-        # phone_sql = "select uphone from myadd_tphone limit 0, 10;"
-        # channels = " select gaddr from myadd_tgroup;"
-        phone = self.cursor.execute(total_phone)
-        channel = self.cursor.execute(total_channel)
-        # phone_numbers = self.cursor.fetchall()
-        return channel, phone
+        self.cursor.execute(phone_numbers_sql)
+        total_phone_numbers = self.cursor.fetchone()[0]
+        while phone_number < total_phone_numbers:
+            self.cursor.execute(phone_number_sql.format(phone_number))
+            phone_numbers = self.cursor.fetchall()  # 返回值类型是元祖嵌套元祖
+            for phone in phone_numbers:
+                self.add_contact("+86" + phone)
+            phone_number += 100
+        return "添加手机联系人完成"
 
-    def create_client(self):
-        """创建客户端"""
-        client = TelegramClient(os.environ.get('TG_SESSION', 'printer'), self.app_id, self.app_hash, proxy=None).start()
-        # try:
-        #     client.start()
-        # except PhoneNumberInvalidError:
-        #     print("Invalid Mobile number,Insert Phone number start with +")
-        #     exit()
-        return client
+    async def get_group(self):
+        """获取群连接"""
+        self.cursor.execute(group_numbers_sql)
+        total_group_numbers = self.cursor.fetchone()[0]
+        while group_number < total_group_numbers:
+            self.cursor.execute(group_number_sql.format(group_number))
+            group_numbers = self.cursor.fetchall()
+            for group in group_numbers:
+                self.join_group(group)
+            group_number += 100
+        return "添加群组完成"
 
-    def join_group(self, client):
+    def join_group(self, group):
         """加入群"""
         try:
             print(sys.argv[1])  # 从外部获得要加入的群链接
         except IndexError:
             print("Please set group link as argument if you want add new group")
         try:
-            client(ImportChatInviteRequest(sys.argv[1]))
+            self.client(ImportChatInviteRequest(sys.argv[1]))
         except (UserAlreadyParticipantError, IndexError, FloodWaitError, UsersTooMuchError) as e:
             print("Error join group")
             print(e)
 
-    def add_contact(self, client):
+    def add_contact(self, phone):
         """添加手机号联系人"""
-        # sql = 'insert into myadd_tphone (uphone, paddr, mark) values ("13245678934","郑州", 0);'
-        sql = "update myadd_tphone set mark=1 where id=0;"
-        self.cursor.execute(sql)
-        self.db.commit()
-        return "add contact success"
+        try:
+            contacts_list.append(InputPhoneContact(client_id=0, phone=phone, first_name="", last_name=""))
+        except:
+            return "add contact failure"
+        else:
+            result = self.client(ImportContactsRequest(contacts_list))
+            self.cursor.execute(phone_update_sql.format(True, phone))
+            self.db.commit()
+            return result + "\n" + "导入联系人成功"
 
-    def add_group_or_channel(self, client):
+    def add_group_or_channel(self):
         """加入群组或频道"""
         return "add channel success"
 
-    def get_group_list(self, client):
+    def get_group_list(self):
         """获取现有群列表"""
-        channel_names = [d.name for d in client.get_dialogs() if d.is_group]
+        channel_names = [d.name for d in self.client.get_dialogs() if d.is_group]
         for idx, ch in enumerate(channel_names):
             print(idx + 1, ch)
-        avail_channels = [d.entity for d in client.get_dialogs() if d.is_group]
+        avail_channels = [d.entity for d in self.client.get_dialogs() if d.is_group]
         return avail_channels
 
-    def get_user_info(self, avail_channels, client):
+    def get_user_info(self, avail_channels):
         """获取群成员信息"""
         offset = 0
         limit = 100
@@ -83,7 +87,7 @@ class Telegram(object):
         # channel_index = input("Please select number of super group you want to scrape> ")
         for channel in avail_channels:
             while True:
-                participants = client(GetParticipantsRequest(
+                participants = self.client(GetParticipantsRequest(
                     channel, ChannelParticipantsSearch(''), offset, limit, hash=0
                 ))
                 time.sleep(20)
@@ -120,7 +124,6 @@ class Telegram(object):
         #
         add_phone_result = self.add_contact("a")
         print(add_phone_result)
-        self.db.close()
 
 
 if __name__ == '__main__':
@@ -129,3 +132,5 @@ if __name__ == '__main__':
     # app_hash = input("请输入app_hash:")
     telegram = Telegram(358839, "81e79f358ac94d6459dc8a199668e66f")
     telegram.run()
+
+
