@@ -8,39 +8,47 @@ class Telegram(object):
         # self.proxy = Utils().proxies()  # 代理IP
         self.db = pymysql.connect(host="192.168.52.110", user="superman", password="123456", port=3306, database="tg")
         self.cursor = self.db.cursor()
-        try:
-            self.client = TelegramClient(os.environ.get('TG_SESSION', 'printer'), app_id, app_hash, proxy=None).start()
-        except PhoneNumberInvalidError:
-            print("Invalid Mobile number,Insert Phone number start with +")
-            exit()
+        # try:
+        #     self.client = TelegramClient(os.environ.get('TG_SESSION', 'printer'), app_id, app_hash, proxy=None).start()
+        # except PhoneNumberInvalidError:
+        #     print("Invalid Mobile number,Insert Phone number start with +")
+        #     exit()
 
     def __del__(self):
         self.db.close()
         # self.client.disconnect()  # 关闭客户端连接
 
-    async def get_phone(self):
-        """获取手机号和群链接"""
+    def get_phone(self):
+        """获取手机号"""
         self.cursor.execute(phone_numbers_sql)
         total_phone_numbers = self.cursor.fetchone()[0]
+        phone_number = 0
         while phone_number < total_phone_numbers:
             self.cursor.execute(phone_number_sql.format(phone_number))
             phone_numbers = self.cursor.fetchall()  # 返回值类型是元祖嵌套元祖
             for phone in phone_numbers:
-                self.add_contact("+86" + phone)
+                print(phone[0])
+                # self.add_contact("+86" + phone)
+                if phone[0] is None:
+                    return
             phone_number += 100
-        return "添加手机联系人完成"
+    print("添加手机联系人完成")
 
-    async def get_group(self):
+    def get_group(self):
         """获取群连接"""
         self.cursor.execute(group_numbers_sql)
         total_group_numbers = self.cursor.fetchone()[0]
+        group_number = 0
         while group_number < total_group_numbers:
             self.cursor.execute(group_number_sql.format(group_number))
             group_numbers = self.cursor.fetchall()
             for group in group_numbers:
-                self.join_group(group)
+                print(group[0])
+                # self.join_group(group[0])
+                if group[0] is None:
+                    return
             group_number += 100
-        return "添加群组完成"
+        print("添加群组完成")
 
     def join_group(self, group):
         """加入群"""
@@ -56,6 +64,7 @@ class Telegram(object):
 
     def add_contact(self, phone):
         """添加手机号联系人"""
+        contacts_list = []
         try:
             contacts_list.append(InputPhoneContact(client_id=0, phone=phone, first_name="", last_name=""))
         except:
@@ -103,9 +112,8 @@ class Telegram(object):
 
     def connect_mysql(self, user):
         """和MySQL数据库进行对接"""
-        sql = "insert into myadd_guser(user_id, first_name, last_name, user_name, user_hash, user_phone, user_bot) values (%s, %s, %s, %s, %s, %s, %s);"
         try:
-            self.cursor.execute(sql, (
+            self.cursor.execute(username_sql, (
             user.id, user.first_name, user.last_name, user.username.user.access_hash, user.phone, user.bot))
             self.db.commit()
         except:
@@ -113,17 +121,19 @@ class Telegram(object):
 
     def run(self):
         # client = self.create_client()
-        total_channel, total_phone = self.get_phone_and_group()
+        # total_channel, total_phone = self.get_phone_and_group()
         # for number in phone_numbers:
         #     # self.add_contact(client)
         #     print(number[0])
-        print("total_phone:", total_phone)
-        print("total_channel:", total_channel)
+        # print("total_phone:", total_phone)
+        # print("total_channel:", total_channel)
         # avail_channels = self.get_group_list(client)
         # self.get_user_info(avail_channels, client)
         #
-        add_phone_result = self.add_contact("a")
-        print(add_phone_result)
+        # add_phone_result = self.add_contact("a")
+        # print(add_phone_result)
+        self.get_phone()
+        self.get_group()
 
 
 if __name__ == '__main__':
