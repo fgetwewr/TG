@@ -1,0 +1,15 @@
+asn1crypto==0.24.0
+async-generator==1.10
+cffi==1.11.5
+cryptography==2.3.1
+idna==2.7
+pyaes==1.6.1
+pyasn1==0.4.4
+pycparser==2.18
+PyMySQL==0.9.2
+PySocks==1.6.8
+rsa==4.0
+selenium==3.14.0
+six==1.11.0
+Telethon==1.2
+urllib3==1.23

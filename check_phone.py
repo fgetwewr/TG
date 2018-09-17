@@ -11,7 +11,7 @@ class Checkphone(object):
         self.db = pymysql.connect(host="192.168.52.110", user="superman", password="123456", port=3306, database="tg")
         self.cursor = self.db.cursor()
         self.browser = webdriver.Chrome()
-        self.browser.implicitly_wait(5)
+        self.browser.implicitly_wait(50)
         self.browser.get(self.url)
 
     def __del__(self):
@@ -52,12 +52,12 @@ class Checkphone(object):
                 self.browser.find_element_by_xpath("//span[@ng-switch-when='PHONE_NUMBER_APP_SIGNUP_FORBIDDEN']")  # 手机号无效或者未注册
                 print("You don't have a Telegram account yet, please with Android / iPhone first")
                 self.browser.find_element_by_xpath("//span[text()='OK']").click()  # 确认有误退出验证下一个
-                # print(phone_update_sql.format(0, 1, phone_number))
                 self.cursor.execute(phone_update_sql.format(0, 1, phone_number))
                 self.db.commit()
                 time.sleep(2)
                 return
-            except:
+            except Exception as e:
+                print(e)
                 pass
             try:
                 self.browser.find_element_by_xpath("//input[@name='phone_code']")  # 手机号被注册过
@@ -67,7 +67,8 @@ class Checkphone(object):
                 self.browser.refresh()
                 time.sleep(2)
                 return
-            except:
+            except Exception as e:
+                print(e)
                 pass
             try:
                 self.browser.find_element_by_xpath("//span[@ng-switch-when='400']")  # 手机号被封禁
@@ -77,16 +78,18 @@ class Checkphone(object):
                 self.db.commit()
                 time.sleep(2)
                 return
-            except:
+            except Exception as e:
+                print(e)
                 pass
             try:
                 self.browser.find_element_by_xpath("//span[@ng-switch-when='420']")  # 请求过于频繁
                 print("You are performing too many actions. Please try again later.")
                 self.browser.find_element_by_xpath("//span[text()='OK']").click()
                 time.sleep(random.randrange(30, 50))
+                self.browser.refresh()
                 self.get_phone_number()
-                # self.browser.refresh()
-            except:
+            except Exception as e:
+                print(e)
                 pass
 
     def run(self):
