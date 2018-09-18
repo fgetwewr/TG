@@ -1,5 +1,5 @@
 from utils import *
-
+logging.ERROR()
 logger = logging.getLogger(__name__)
 
 
@@ -8,11 +8,12 @@ class Telegram(object):
         # self.proxy = Utils().proxies()  # 代理IP
         self.db = pymysql.connect(host="192.168.52.110", user="superman", password="123456", port=3306, database="tg")
         self.cursor = self.db.cursor()
-        # try:
-        #     self.client = TelegramClient(os.environ.get('TG_SESSION', 'printer'), app_id, app_hash, proxy=None).start()
-        # except PhoneNumberInvalidError:
-        #     print("Invalid Mobile number,Insert Phone number start with +")
-        #     exit()
+        try:
+            self.client = TelegramClient(os.environ.get('TG_SESSION', 'printer'), app_id, app_hash, proxy=None).start()
+            self.client.
+        except PhoneNumberInvalidError:
+            print("Invalid Mobile number,Insert Phone number start with +")
+            exit()
 
     def __del__(self):
         self.db.close()
