@@ -5,6 +5,8 @@ import sys
 import time
 import logging
 import pymysql
+import requests
+from bs4 import BeautifulSoup
 from telethon import TelegramClient
 from telethon.errors.rpcerrorlist import FloodWaitError
 from telethon.errors.rpcerrorlist import UserAlreadyParticipantError, UsersTooMuchError, PhoneNumberInvalidError
@@ -16,11 +18,11 @@ from telethon.tl.types import InputPhoneContact
 from telethon.tl.functions.auth import CheckPasswordRequest
 from telethon.utils import parse_phone
 
-phone_numbers_sql = "select count(uphone) from myadd_tphone where checked=0;"  # 手机号总数
+phone_numbers_sql = "select count(phone) from myAdd_guangxi where checked=0;"  # 手机号总数
 group_numbers_sql = "select count(gaddr) from myadd_tgroup;"  # 群链接的总数
-phone_update_sql = "update myadd_tphone set mark={},checked={} where uphone={};"  # 更新手机号
+phone_update_sql = "update myAdd_guangxi set mark={},checked={} where phone={};"  # 更新手机号
 
-phone_number_sql = "select uphone from myadd_tphone where checked=0 limit {}, 100;"  # 手机号
+phone_number_sql = "select phone from myAdd_guangxi where checked=0 limit {}, 8;"  # 手机号
 group_number_sql = "select gaddr from myadd_tgroup limit {}, 100;"  # 群链接地址
 
 # 用户信息
@@ -31,12 +33,6 @@ class Utils(object):
     def __init__(self):
         pass
 
-    def proxies(self):
-        """代理IP"""
-        proxies = ["64.118.87.28:2447", ]
-        proxy = random.choice(proxies)
-        return proxy
-
     def headers(self):
         """请求头"""
         headers = [{"User-Agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.81 Mobile Safari/537.36"},
@@ -44,6 +40,12 @@ class Utils(object):
         header = random.choice(headers)
         return header
 
+    def get_proxy(self):
+        """获取代理IP"""
+        response = requests.get("http://127.0.0.1:5000/random")
+        proxy = BeautifulSoup(response.text, "lxml").get_text()
+        return proxy
 
-# utils = Utils()
+
+utils = Utils()
 # constants.py  常量

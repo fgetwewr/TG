@@ -2,20 +2,23 @@ import random
 import time
 import pymysql
 from selenium import webdriver
-from utils import Utils, phone_numbers_sql, phone_number_sql, phone_update_sql
+from utils import utils, phone_numbers_sql, phone_number_sql, phone_update_sql
 
 
 class Checkphone(object):
     def __init__(self):
         self.url = "https://web.telegram.org/#/login"
-        self.db = pymysql.connect(host="192.168.52.110", user="superman", password="123456", port=3306, database="tg")
+        self.db = pymysql.connect(host="192.168.52.110", user="superman", password="Caoke123#", port=3306, database="tg")
         self.cursor = self.db.cursor()
-        # self.chromeOptions = webdriver.ChromeOptions()
-        # self.chromeOptions.add_argument('--proxy-server=http://{ip}:{port}')  # 设置代理
+        self.chromeOptions = webdriver.ChromeOptions()
+        self.chromeOptions.add_argument('--proxy-server=http://{}'.format(utils.get_proxy()))  # 设置代理
         # self.chromeOptions.add_argument('content-Type:"application/x-www-form-urlencoded}"')  # 设置请求头的内容格式
-        # self.browser = webdriver.Chrome(chrome_options=self.chromeOptions)
-        self.browser = webdriver.Chrome()  # content-Type:application/x-www-form-urlencoded
-        self.browser.implicitly_wait(10)
+        # try:
+        self.browser = webdriver.Chrome(chrome_options=self.chromeOptions)
+        # except:
+        #     self.__init__()
+        # self.browser = webdriver.Chrome()  # content-Type:application/x-www-form-urlencoded
+        self.browser.implicitly_wait(50)
         self.browser.get(self.url)
         print(self.browser.current_url)
 
@@ -40,7 +43,8 @@ class Checkphone(object):
                 # self.add_contact("+86" + phone)
                 self.send_keys(phone[0])
                 self.parse(phone[0])
-            phone_number += 100
+            self.__init__()
+            phone_number += 8
 
     def send_keys(self, phone_number):
         """填充数据并确认"""
@@ -50,8 +54,9 @@ class Checkphone(object):
         self.browser.find_element_by_xpath("//input[@name='phone_number']").clear()
         self.browser.find_element_by_xpath("//input[@name='phone_country']").send_keys("+86")  # phone country
         self.browser.find_element_by_xpath("//input[@name='phone_number']").send_keys(phone_number)  # phone number
-        time.sleep(random.randrange(1, 2))
+        time.sleep(random.uniform(1, 2))
         self.browser.find_element_by_xpath("//my-i18n[text()='Next']").click()  # 点击下一步
+        time.sleep(random.uniform(2, 4))
         self.browser.find_element_by_xpath("//span[text()='OK']").click()  # 确认手机号
         time.sleep(random.randrange(3, 5))
 
@@ -74,11 +79,13 @@ class Checkphone(object):
                 self.db.rollback()
                 pass
             try:
-                self.browser.find_element_by_xpath("//span[@ng-switch-when='420']")  # 请求过于频繁
+                self.browser.find_element_by_xpath("//span[@ng-switch-when='420']")  # 请求过于频繁,不修改数据库
                 print("You are performing too many actions. Please try again later." + "---->" + phone_number)
                 self.browser.find_element_by_xpath("//span[text()='OK']").click()
-                time.sleep(random.randrange(30, 50))
-                self.browser.refresh()
+                # time.sleep(random.randrange(30, 50))  # 隐式等待可以代替
+                # self.browser.refresh()
+                self.browser.close()
+                self.__init__()
                 self.get_phone_number()
             except Exception as e:
                 print(e)
