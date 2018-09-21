@@ -8,8 +8,8 @@ import pymysql
 import requests
 from bs4 import BeautifulSoup
 from telethon import TelegramClient
-from telethon.errors.rpcerrorlist import FloodWaitError
-from telethon.errors.rpcerrorlist import UserAlreadyParticipantError, UsersTooMuchError, PhoneNumberInvalidError
+# from telethon.errors.rpcerrorlist import FloodWaitError
+# from telethon.errors.rpcerrorlist import UserAlreadyParticipantError, UsersTooMuchError, PhoneNumberInvalidError
 from telethon.tl.functions.channels import GetParticipantsRequest
 from telethon.tl.types import ChannelParticipantsSearch
 from telethon.tl.functions.messages import ImportChatInviteRequest
@@ -22,7 +22,7 @@ phone_numbers_sql = "select count(phone) from myAdd_guangxi where checked=0;"  #
 group_numbers_sql = "select count(gaddr) from myadd_tgroup;"  # 群链接的总数
 phone_update_sql = "update myAdd_guangxi set mark={},checked={} where phone={};"  # 更新手机号
 
-phone_number_sql = "select phone from myAdd_guangxi where checked=0 limit {}, 8;"  # 手机号
+phone_number_sql = "select phone from myAdd_guangxi where checked=0 limit {}, 200;"  # 手机号
 group_number_sql = "select gaddr from myadd_tgroup limit {}, 100;"  # 群链接地址
 
 # 用户信息

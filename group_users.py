@@ -10,7 +10,7 @@ class Telegram(object):
         self.cursor = self.db.cursor()
         try:
             self.client = TelegramClient(os.environ.get('TG_SESSION', 'printer'), app_id, app_hash, proxy=None).start()
-            self.client.
+            # self.client.
         except PhoneNumberInvalidError:
             print("Invalid Mobile number,Insert Phone number start with +")
             exit()
