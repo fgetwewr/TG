@@ -92,26 +92,22 @@ import multiprocessing
 import time
 
 
-class Students(object):
-    """创建学生类"""
-    def __init__(self, number):
-        print("---" + number + "---")
-        time.sleep(1)
-
-
-if __name__ == "__main__":
-    pool = multiprocessing.Pool(processes=4)
-    result = []
-    for i in range(10):
-        msg = "hello %d" % (i)
-        result.append(pool.apply_async(Students, (msg,)))
-    pool.close()
-    pool.join()
-    for res in result:
-        print(res)
-    print("Sub-process(es) done.")
-
-
-
-
-
+# class Students(object):
+#     """创建学生类"""
+#     def __init__(self, number):
+#         print("---" + number + "---")
+#         time.sleep(1)
+#
+#
+# if __name__ == "__main__":
+#     pool = multiprocessing.Pool(processes=4)
+#     result = []
+#     for i in range(10):
+#         msg = "hello %d" % (i)
+#         result.append(pool.apply_async(Students, (msg,)))
+#     pool.close()
+#     pool.join()
+#     for res in result:
+#         print(res)
+#     print("Sub-process(es) done.")
+#
