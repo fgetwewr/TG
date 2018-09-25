@@ -44,6 +44,9 @@ class Utils(object):
         """获取代理IP"""
         response = requests.get("http://127.0.0.1:5000/random")
         proxy = BeautifulSoup(response.text, "lxml").get_text()
+        response = requests.get("https://web.telegram.org")
+        if response.status_code != 200:
+            self.get_proxy()
         return proxy
 
 

@@ -1,11 +1,9 @@
+# -*- coding: utf-8 -*-
 import random
 import time
 import pymysql
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
-# from selenium.webdriver.support.ui import WebDriverWait
+import multiprocessing
 from utils import utils, phone_numbers_sql, phone_number_sql, phone_update_sql
 
 
@@ -28,12 +26,19 @@ class Checkphone(object):
 
     def browser_set(self, proxy):
         """构建浏览器"""
+        # Chrome浏览器
         chromeOptions = webdriver.ChromeOptions()
         chromeOptions.add_argument('--headless')
         chromeOptions.add_argument('--disable-gpu')
         chromeOptions.add_argument('--proxy-server=http://{}'.format(proxy))  # 设置代理
-        # self.chromeOptions.add_argument('content-Type:"application/x-www-form-urlencoded}"')  # 设置请求头的内容格式
         browser = webdriver.Chrome(chrome_options=chromeOptions)
+        # self.chromeOptions.add_argument('content-Type:"application/x-www-form-urlencoded}"')  # 设置请求头的内容格式
+
+        # IE浏览器,pass
+        # IeOptions = webdriver.ie
+        # browser = webdriver.Ie()
+
+
         browser.maximize_window()
         browser.implicitly_wait(15)  # 隐式等待
         return browser
@@ -90,15 +95,15 @@ class Checkphone(object):
         """结果处理"""
         print("----正在进行结果处理----")
         try:
-            browser.find_element_by_xpath(
-                "//span[@ng-switch-when='PHONE_NUMBER_APP_SIGNUP_FORBIDDEN']") or browser.find_element_by_xpath(
-                "//span[@ng-switch-when='400']")  # 手机号无效、未注册或者是封禁
-            print(
-                "You don't have a Telegram account yet, please with Android / iPhone first or One of the params is missing or invalid" + "---->" + phone_number)
-            browser.find_element_by_xpath("//span[text()='OK']").click()  # 确认有误退出验证下一个
-            self.cursor.execute(phone_update_sql.format(0, 1, phone_number))
-            self.db.commit()
-            return
+            if browser.find_element_by_xpath(
+                    "//span[@ng-switch-when='PHONE_NUMBER_APP_SIGNUP_FORBIDDEN']") or browser.find_element_by_xpath(
+                "//span[@ng-switch-when='400']"):  # 手机号无效、未注册或者是封禁
+                print(
+                    "You don't have a Telegram account yet, please with Android / iPhone first or One of the params is missing or invalid" + "---->" + phone_number)
+                browser.find_element_by_xpath("//span[text()='OK']").click()  # 确认有误退出验证下一个
+                self.cursor.execute(phone_update_sql.format(0, 1, phone_number))
+                self.db.commit()
+                return
         except Exception as e:
             print(e)
             self.db.rollback()
@@ -119,25 +124,32 @@ class Checkphone(object):
         self.run()
 
     def run(self):
+        # pool = multiprocessing.Pool(processes=4)
+        # for i in range(10):
+        #     proxy = pool.apply_async(self.reset_proxy())
+        #     browser = pool.apply_async(self.browser_set(proxy)) v
+        #     browser.get(self.url)
+        #     self.get_phone_number(browser)
+        # pool.close()
+        # pool.join()
+        # print("Sub-process(es) done.")
+
         proxy = self.reset_proxy()
         browser = self.browser_set(proxy)
         print("----请求新的URL----")
         browser.get(self.url)
-        print(browser.current_url)
         self.get_phone_number(browser)
 
 
 if __name__ == '__main__':
     checkphone = Checkphone()
     checkphone.run()
+    # checks = [Checkphone().run() for i in range(4)]
+
+
 
 '''
-如何切新标签，
-实现切换新标签的同时，更换IP，
-尽可能的提升效率，考虑使用多线程，进程等方式
-创建浏览器对象，代理IP重置
-判断第一次请求是不是想要的界面，状态码是不是200
-第一次打开浏览器的时候很慢，修改默认等待时间
+利用队列解决查询数据库重复的问题
 '''
 
 

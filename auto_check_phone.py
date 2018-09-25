@@ -31,11 +31,12 @@ rproxy = utils.get_proxy()
 host = rproxy.split(":")[0]
 port = rproxy.split(":")[1]
 proxy = (socks.SOCKS5, host, int(port))
+print(proxy)
 
 api_id = 365847
 api_hash = "46fe393febe53876dd3267a6aff47c15"
 
-client = Phonecontact('check', api_id, api_hash, proxy=None)
+client = Phonecontact('check', api_id, api_hash, proxy=proxy)
 client.connect()
 
 d = '''
