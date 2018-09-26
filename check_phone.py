@@ -37,7 +37,6 @@ class Checkphone(object):
         # IeOptions = webdriver.ie
         # browser = webdriver.Ie()
 
-
         browser.maximize_window()
         browser.implicitly_wait(15)  # 隐式等待
         return browser
@@ -68,12 +67,7 @@ class Checkphone(object):
         """填充数据并确认"""
         print("----正在填充数据----")
         try:
-            # time.sleep(random.uniform(2, 3))
-            # self.browser.find_element_by_xpath("//div[@class='md-input']").click()  # country
-            # self.browser.find_element_by_xpath("//input[@type='search']").send_keys("China")
-            # self.browser.find_element_by_xpath("//span[text()='China']").click()
-            # time.sleep(random.uniform(3, 4))
-
+            # 国家根据区号就可以判断
             browser.find_element_by_xpath("//input[@name='phone_country']").clear()
             browser.find_element_by_xpath("//input[@name='phone_number']").clear()
             browser.find_element_by_xpath("//input[@name='phone_country']").send_keys("+86")  # phone country
@@ -95,9 +89,16 @@ class Checkphone(object):
         print("----正在进行结果处理----")
         try:
             browser.find_element_by_xpath(
+<<<<<<< HEAD
                     "//span[@ng-switch-when='PHONE_NUMBER_APP_SIGNUP_FORBIDDEN']") and browser.find_element_by_xpath(
                 "//span[@ng-switch-when='400']")  # 手机号无效、未注册或者是封禁
             print("You don't have a Telegram account yet, please with Android / iPhone first or One of the params is missing or invalid" + "---->" + phone_number)
+=======
+                    "//span[@ng-switch-when='PHONE_NUMBER_APP_SIGNUP_FORBIDDEN']") or browser.find_element_by_xpath(
+                "//span[@ng-switch-when='400']")  # 手机号无效、未注册或者是封禁
+            print(
+                "You don't have a Telegram account yet, please with Android / iPhone first or One of the params is missing or invalid" + "---->" + phone_number)
+>>>>>>> e95855aaf8cdc4a9045e16c04c6893314d2bc921
             browser.find_element_by_xpath("//span[text()='OK']").click()  # 确认有误退出验证下一个
             self.cursor.execute(phone_update_sql.format(0, 1, phone_number))
             self.db.commit()
