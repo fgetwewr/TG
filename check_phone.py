@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 import random
 import time
 import pymysql
 from selenium import webdriver
-import multiprocessing
+import threading, queue
 from utils import utils, phone_numbers_sql, phone_number_sql, phone_update_sql
 
 
@@ -12,9 +11,6 @@ class Checkphone(object):
         self.url = "https://web.telegram.org/#/login"
         self.db = pymysql.connect(host="192.168.52.110", user="superman", password="Caoke123#", port=3306, database="tg")
         self.cursor = self.db.cursor()
-        print("---"*80)
-        print(utils.get_proxy())
-        print("---"*80)
 
     def __del__(self):
         self.db.close()
@@ -22,6 +18,9 @@ class Checkphone(object):
     def reset_proxy(self):
         """重置IP代理"""
         proxy = utils.get_proxy()
+        print("---"*80)
+        print(proxy)
+        print("---"*80)
         return proxy
 
     def browser_set(self, proxy):
@@ -95,15 +94,14 @@ class Checkphone(object):
         """结果处理"""
         print("----正在进行结果处理----")
         try:
-            if browser.find_element_by_xpath(
-                    "//span[@ng-switch-when='PHONE_NUMBER_APP_SIGNUP_FORBIDDEN']") or browser.find_element_by_xpath(
-                "//span[@ng-switch-when='400']"):  # 手机号无效、未注册或者是封禁
-                print(
-                    "You don't have a Telegram account yet, please with Android / iPhone first or One of the params is missing or invalid" + "---->" + phone_number)
-                browser.find_element_by_xpath("//span[text()='OK']").click()  # 确认有误退出验证下一个
-                self.cursor.execute(phone_update_sql.format(0, 1, phone_number))
-                self.db.commit()
-                return
+            browser.find_element_by_xpath(
+                    "//span[@ng-switch-when='PHONE_NUMBER_APP_SIGNUP_FORBIDDEN']") and browser.find_element_by_xpath(
+                "//span[@ng-switch-when='400']")  # 手机号无效、未注册或者是封禁
+            print("You don't have a Telegram account yet, please with Android / iPhone first or One of the params is missing or invalid" + "---->" + phone_number)
+            browser.find_element_by_xpath("//span[text()='OK']").click()  # 确认有误退出验证下一个
+            self.cursor.execute(phone_update_sql.format(0, 1, phone_number))
+            self.db.commit()
+            return
         except Exception as e:
             print(e)
             self.db.rollback()

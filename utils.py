@@ -8,8 +8,8 @@ import pymysql
 import requests
 from bs4 import BeautifulSoup
 from telethon import TelegramClient
-# from telethon.errors.rpcerrorlist import FloodWaitError
-# from telethon.errors.rpcerrorlist import UserAlreadyParticipantError, UsersTooMuchError, PhoneNumberInvalidError
+from telethon.errors.rpcerrorlist import FloodWaitError
+from telethon.errors.rpcerrorlist import UserAlreadyParticipantError, UsersTooMuchError, PhoneNumberInvalidError
 from telethon.tl.functions.channels import GetParticipantsRequest
 from telethon.tl.types import ChannelParticipantsSearch
 from telethon.tl.functions.messages import ImportChatInviteRequest
@@ -25,8 +25,11 @@ phone_update_sql = "update myAdd_guangxi set mark={},checked={} where phone={};"
 phone_number_sql = "select phone from myAdd_guangxi where checked=0 limit {}, 200;"  # 手机号
 group_number_sql = "select gaddr from myadd_tgroup limit {}, 100;"  # 群链接地址
 
+# 清空数据库，自动增长键归零
+sql = "truncate table table_name;"
+
 # 用户信息
-username_sql = "insert into myadd_guser(user_id, first_name, last_name, user_name, user_hash, user_phone, user_bot) values (%s, %s, %s, %s, %s, %s, %s);"
+username_sql = "insert into myAdd_guser(user_id, first_name, last_name, user_name, user_hash, user_bot) values (%s, %s, %s, %s, %s, %s);"
 
 
 class Utils(object):

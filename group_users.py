@@ -115,7 +115,7 @@ class Telegram(object):
         """和MySQL数据库进行对接"""
         try:
             self.cursor.execute(username_sql, (
-            user.id, user.first_name, user.last_name, user.username.user.access_hash, user.phone, user.bot))
+            user.id, user.first_name, user.last_name, user.username, user.access_hash, user.bot))
             self.db.commit()
         except:
             self.db.rollback()
@@ -141,7 +141,7 @@ if __name__ == '__main__':
     # 要判断用户输入的内容
     # app_id = int(input("请输入app_id:"))
     # app_hash = input("请输入app_hash:")
-    telegram = Telegram(358839, "81e79f358ac94d6459dc8a199668e66f")
+    telegram = Telegram(365847, "46fe393febe53876dd3267a6aff47c15")
     telegram.run()
 
 

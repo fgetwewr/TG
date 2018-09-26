@@ -1,3 +1,6 @@
+import pymysql
+import requests
+from bs4 import BeautifulSoup
 from telethon.tl.functions.channels import GetParticipantsRequest
 from telethon.tl.types import ChannelParticipantsSearch
 from telethon.tl.functions.messages import SendMessageRequest
@@ -18,15 +21,32 @@ from telethon import sync
 import time
 import random
 import socks
+import utils
+from utils import username_sql
 
-APP_ID = "362716"
-APP_HASH = "1d8cfdc2afe9d9b6888b878ac7697de3"
+APP_ID = "365847"
+APP_HASH = "46fe393febe53876dd3267a6aff47c15"
 
-proxy_list = ["127.0.0.1:8888", ]
-rproxy = random.choice(proxy_list)
-host = rproxy.split(":")[0]
-port = rproxy.split(":")[1]
-proxy = (socks.SOCKS5, host, int(port))
+
+def get_proxy():
+    """获取代理IP"""
+    # response = requests.get("http://127.0.0.1:5000/random")
+    # proxy = BeautifulSoup(response.text, "lxml").get_text()
+    # response = requests.get("https://web.telegram.org")
+    # if response.status_code != 200:
+    #     self.get_proxy()
+    proxy_list = [" 218.248.73.193:1080", "5.56.133.131:1080"]
+    proxy = random.choice(proxy_list)
+    # response = requests.get("https://web.telegram.org")
+    # if response.status_code != 200:
+    #     proxy = random.choice(proxy_list)
+    host = proxy.split(":")[0]
+    port = proxy.split(":")[1]
+    proxy = (socks.SOCKS5, host, int(port))
+    print("--"*80)
+    print(proxy)
+    print("--"*80)
+    return proxy
 
 
 def get_env(name, message, cast=str):
@@ -44,12 +64,14 @@ def get_env(name, message, cast=str):
 client = TelegramClient(os.environ.get('TG_SESSION', 'printer'), APP_ID, APP_HASH,
                         # get_env('TG_API_ID', 'Enter your API ID: ', int),
                         # get_env('TG_API_HASH', 'Enter your API hash: '),
-                        proxy=proxy
+                        # proxy=get_proxy(),
+                        proxy=None,
                         )
 try:
     client.start()
 except PhoneNumberInvalidError:
     print("Invalid Mobile number,Insert Phone number start with +")
+    client.disconnect()
     exit()
 try:
     print(sys.argv[1])
@@ -90,10 +112,23 @@ channel = avail_channels[int(channel_index) - 1]
 
 
 # client.run_until_disconnected()#
-print("write in 'users.csv'")
 
+def save_db(user):
+    """保存到数据库"""
+    db = pymysql.connect(host="192.168.52.110", user="superman", password="Caoke123#", port=3306, database="tg", charset="utf8")
+    cursor = db.cursor()
+    try:
+        cursor.execute(username_sql, (user.id, user.first_name, user.last_name, user.username, user.access_hash, user.bot))
+        db.commit()
+    except Exception as e:
+        print(e)
+        print("----保存到数据库失败----")
+        db.rollback()
+
+
+print("write in 'users.csv'")
 with open('users.csv', 'w') as f:  # Just use 'w' mode in 3.x
-    w = csv.DictWriter(f, ["id", "first_name", "last_name", "username", "bot"])
+    w = csv.DictWriter(f, ["user_id", "first_name", "last_name", "username", "user_hash", "user_phone", "bot"])
     w.writeheader()
 
     while True:
@@ -105,11 +140,15 @@ with open('users.csv', 'w') as f:  # Just use 'w' mode in 3.x
             break
         all_participants.extend(participants.users)
         for user in all_participants[offset:]:
-            w.writerow({"id": user.id,
-                        "first_name": user.first_name,
-                        "last_name": user.last_name,
-                        "username": user.username,
-                        "bot": user.bot,
+            save_db(user)
+            w.writerow({
+                "user_id": user.id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "username": user.username,
+                "user_hash": user.access_hash,  # 用户hash值
+                "user_phone": user.phone,
+                "bot": user.bot,  # 判断是机器人还是用户
                         })
         f.flush()
         offset += len(participants.users)
@@ -122,5 +161,8 @@ with open('users.csv', 'w') as f:  # Just use 'w' mode in 3.x
 
 # ufile.write(user.stringify())
 # print(user.stringify())
-print("finish")
+print("----finish----")
+client.disconnect()
 time.sleep(20)
+print("----time sleep over----")
+

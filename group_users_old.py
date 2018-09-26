@@ -3,6 +3,8 @@ import csv
 import sys
 import time
 import random
+
+import pymysql
 import socks
 from telethon.tl.functions.channels import GetParticipantsRequest
 from telethon.tl.types import ChannelParticipantsSearch
@@ -17,6 +19,7 @@ from telethon.tl.functions.channels import JoinChannelRequest
 from telethon import utils
 from telethon import events
 from telethon import sync
+from utils import username_sql
 
 APP_ID = "337766"
 APP_HASH = "c0cd9da9be057008a31af207725a41b4"
@@ -102,11 +105,28 @@ while True:
     offset += len(participants.users)
     print("extracted : " + str(offset))
 
-with open('users.csv', 'w') as f:  # Just use 'w' mode in 3.x
+
+def save_db(user):
+    """保存到数据库"""
+    db = pymysql.connect(host="192.168.52.110", user="superman", password="123456", port=3306, database="tg")
+    cursor = db.cursor()
+    try:
+        cursor.execute(username_sql, (user.id, user.first_name, user.last_name, user.username, user.access_hash, user.bot))
+        db.commit()
+    except:
+        print("----保存到数据库失败----")
+        db.rollback()
+
+
+with open('users.csv', 'a') as f:  # Just use 'w' mode in 3.x
     w = csv.DictWriter(f, ["id", "first_name", "last_name", "username", "bot"])
     w.writeheader()
 
+    # 写入数据库
+
+    # 保存到csv文件中
     for user in all_participants:
+        save_db(user)
         w.writerow({
                     "user_id": user.id,
                     "first_name": user.first_name,
